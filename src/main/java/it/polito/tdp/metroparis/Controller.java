@@ -1,14 +1,18 @@
 package it.polito.tdp.metroparis;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.metroparis.model.Fermata;
+import it.polito.tdp.metroparis.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 
 public class Controller {
-
+	private Model model;
     @FXML
     private ResourceBundle resources;
 
@@ -16,10 +20,10 @@ public class Controller {
     private URL location;
 
     @FXML
-    private ComboBox<?> boxArrivo;
+    private ComboBox<Fermata> boxArrivo;
 
     @FXML
-    private ComboBox<?> boxPartenza;
+    private ComboBox<Fermata> boxPartenza;
 
     @FXML
     private TextArea txtResult;
@@ -31,7 +35,10 @@ public class Controller {
 
     @FXML
     void handleCrea(ActionEvent event) {
-
+    	this.model.creaGrafo();
+    	if(this.model.isGraficoLoaded()==true) {
+    		txtResult.setText("grafo correttamente creato");
+    	}
     }
 
     @FXML
@@ -41,5 +48,13 @@ public class Controller {
         assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Metro.fxml'.";
 
     }
+
+	public void setModel(Model m) {
+		// TODO Auto-generated method stub
+		this.model = m;
+		List<Fermata> fermate = this.model.getAllFermate();
+		boxPartenza.getItems().setAll(fermate);
+		boxArrivo.getItems().setAll(fermate);
+	}
 
 }

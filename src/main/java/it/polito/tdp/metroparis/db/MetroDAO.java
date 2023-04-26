@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.javadocmd.simplelatlng.LatLng;
 
@@ -26,7 +27,7 @@ public class MetroDAO {
 			ResultSet rs = st.executeQuery();
 
 			while (rs.next()) {
-				Fermata f = new Fermata(rs.getInt("id_Fermata"), rs.getString("nome"),
+				Fermata f = new Fermata(rs.getInt("id_fermata"), rs.getString("nome"),
 						new LatLng(rs.getDouble("coordx"), rs.getDouble("coordy")));
 				fermate.add(f);
 			}
@@ -68,7 +69,112 @@ public class MetroDAO {
 
 		return linee;
 	}
-
 	
+	
+	public boolean isConnesse(Fermata partenza, Fermata arrivo) {
+		
+		String sql = "SELECT COUNT(*) AS c "
+				+ "FROM connessione "
+				+ "WHERE id_stazP=? "
+				+ "AND id_stazA=?";
+		
+		try {
+			
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, partenza.getIdFermata());
+			st.setInt(2, arrivo.getIdFermata());
+			
+			ResultSet res = st.executeQuery();
+			
+			res.first();
+			
+			int c = res.getInt("c");
+			
+			conn.close();
+			
+			return c != 0;
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
+	}
 
+	public List<Fermata> trovaCollegate(Fermata partenza) {
+		// TODO Auto-generated method stub
+		
+		String sql = "SELECT * "
+				+ "FROM fermata "
+				+ "WHERE id_fermata IN( "
+				+ "SELECT id_stazA "
+				+ "FROM connessione "
+				+ "WHERE id_stazP=? "
+				+ "GROUP BY id_stazA "
+				+ ")ORDER BY nome ASC";
+		
+		List<Fermata> fermate = new ArrayList<>();
+		
+		try {
+			
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, partenza.getIdFermata());
+			
+			
+			ResultSet res = st.executeQuery();
+			
+			while(res.next()) {
+				Fermata f = new Fermata(res.getInt("id_fermata"), res.getString("nome"),
+						new LatLng(res.getDouble("coordx"), res.getDouble("coordy")));
+				fermate.add(f);
+			}
+			st.close();
+			conn.close();
+			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+		return fermate;
+	}
+	
+	public List<Fermata> trovaIdCollegate(Fermata partenza, Map<Integer, Fermata> fermateIdMap ) {
+		String sql = "SELECT id_stazA "
+				+ "FROM connessione "
+				+ "WHERE id_stazP = ? "
+				+ "GROUP BY id_stazA ";
+		
+		List<Fermata> fermate = new ArrayList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection() ;
+			
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			st.setInt(1, partenza.getIdFermata());
+			
+			ResultSet res = st.executeQuery() ;
+			
+			while(res.next()) {				
+				Integer idFermata = res.getInt("id_stazA");
+				fermate.add(fermateIdMap.get(idFermata));
+			}
+			
+			st.close();
+			conn.close();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		} 
+
+		return fermate;
+	}
 }
