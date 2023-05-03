@@ -1,4 +1,5 @@
 package it.polito.tdp.metroparis.model;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -6,6 +7,7 @@ import java.util.Map;
 import org.jgrapht.*;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.traverse.BreadthFirstIterator;
 
 import it.polito.tdp.metroparis.db.MetroDAO;
 
@@ -85,5 +87,46 @@ public class Model {
 	
 	public boolean isGraficoLoaded() {
 		return this.grafo.vertexSet().size()>0;
+	}
+	
+	
+	
+	
+	//funzione che determina il percorso minimo tra due fermate
+	
+	public List<Fermata> percorso(Fermata partenza, Fermata arrivo){
+		
+		BreadthFirstIterator<Fermata, DefaultEdge> visita = 
+				new BreadthFirstIterator<Fermata, DefaultEdge>(this.grafo, partenza);
+		
+		List<Fermata> raggiungibili = new ArrayList<Fermata>();
+		while(visita.hasNext()) {
+			Fermata f = visita.next();
+			raggiungibili.add(f);
+		}
+		//System.out.println(raggiungibili);
+		
+		//ora bisogna trovare il percorso
+		
+		List<Fermata> percorso = new ArrayList<Fermata>();
+		//inizializzo definendo la fermata di arrivo e il rispettivo arco come dati iniziali
+		Fermata corrente = arrivo;
+		DefaultEdge e = visita.getSpanningTreeEdge(corrente);
+		
+		while(e!= null) {
+			
+			//fino a che non esistono archi precedenti 
+			//aggiorno le condizioni iniziali
+			// e aggiungo al percorso
+			
+			Fermata precedente = Graphs.getOppositeVertex(grafo, e, corrente);
+			percorso.add(0, precedente);
+			
+			corrente = precedente;
+			e = visita.getSpanningTreeEdge(corrente);
+		}
+		
+	
+		return percorso;
 	}
 }
